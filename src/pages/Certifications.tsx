@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Award, Shield, ExternalLink, Download, Share2, CheckCircle, Clock, Star } from 'lucide-react';
+import AlgorandCertificate from '../components/AlgorandCertificate';
 
 interface Certification {
   id: string;
@@ -15,6 +16,7 @@ interface Certification {
 
 const Certifications: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'earned' | 'in_progress' | 'available'>('all');
+  const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
 
   const certifications: Certification[] = [
     {
@@ -23,7 +25,7 @@ const Certifications: React.FC = () => {
       issuer: 'CareerPath AI',
       date: '2024-01-15',
       status: 'earned',
-      blockchainHash: '0x1a2b3c4d5e6f...',
+      blockchainHash: 'ALGO_TX_1A2B3C4D5E6F7890ABCDEF1234567890',
       description: 'Comprehensive foundation in data science concepts and practical applications.',
       skills: ['Python', 'Statistics', 'Data Analysis', 'Machine Learning Basics'],
       credentialUrl: 'https://verify.careerpath.ai/cert/1'
@@ -34,7 +36,7 @@ const Certifications: React.FC = () => {
       issuer: 'CareerPath AI',
       date: '2024-02-20',
       status: 'earned',
-      blockchainHash: '0x2b3c4d5e6f7a...',
+      blockchainHash: 'ALGO_TX_2B3C4D5E6F7A8901BCDEF2345678901A',
       description: 'Advanced Python concepts for professional software development.',
       skills: ['Python', 'OOP', 'Data Structures', 'Algorithms'],
       credentialUrl: 'https://verify.careerpath.ai/cert/2'
@@ -92,12 +94,12 @@ const Certifications: React.FC = () => {
 
   const handleVerifyBlockchain = (cert: Certification) => {
     if (cert.blockchainHash) {
-      alert(`Blockchain Verification (Algorand)\n\nTransaction Hash: ${cert.blockchainHash}\n\nThis certificate is permanently verified on the Algorand blockchain, ensuring its authenticity and preventing tampering.`);
+      setSelectedCert(cert);
     }
   };
 
   const handleShareCertification = (cert: Certification) => {
-    const shareText = `I just earned the "${cert.title}" certification from ${cert.issuer}! 🎉 #careergoals #certification`;
+    const shareText = `I just earned the "${cert.title}" certification from ${cert.issuer}! 🎉 Verified on Algorand blockchain. #careergoals #certification #blockchain`;
     
     if (navigator.share) {
       navigator.share({
@@ -202,7 +204,7 @@ const Certifications: React.FC = () => {
                         className="flex items-center space-x-1 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
                       >
                         <Shield className="w-3 h-3" />
-                        <span>Verify</span>
+                        <span>Verify on Algorand</span>
                       </button>
                       <button
                         onClick={() => handleShareCertification(cert)}
@@ -250,12 +252,12 @@ const Certifications: React.FC = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                Blockchain-Verified Credentials
+                Algorand Blockchain-Verified Credentials
               </h3>
               <p className="text-secondary-700 mb-3">
                 All CareerPath AI certifications are permanently recorded on the Algorand blockchain, 
                 ensuring they cannot be forged or tampered with. Employers can instantly verify 
-                your credentials using the blockchain hash.
+                your credentials using the blockchain transaction hash.
               </p>
               <div className="flex items-center space-x-4 text-sm text-secondary-600">
                 <div className="flex items-center space-x-1">
@@ -270,10 +272,48 @@ const Certifications: React.FC = () => {
                   <CheckCircle className="w-4 h-4 text-green-600" />
                   <span>Globally recognized</span>
                 </div>
+                <div className="flex items-center space-x-1">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span>Eco-friendly blockchain</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Certificate Verification Modal */}
+        {selectedCert && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Certificate Verification</h2>
+                  <button
+                    onClick={() => setSelectedCert(null)}
+                    className="text-gray-500 hover:text-gray-700 p-2"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <AlgorandCertificate
+                  certificate={{
+                    id: selectedCert.id,
+                    title: selectedCert.title,
+                    recipient: 'John Doe', // This would come from user context
+                    issuer: selectedCert.issuer,
+                    completionDate: selectedCert.date,
+                    blockchainHash: selectedCert.blockchainHash,
+                    explorerUrl: `https://testnet.algoexplorer.io/tx/${selectedCert.blockchainHash}`
+                  }}
+                  onVerify={(isValid) => {
+                    console.log('Certificate verification result:', isValid);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

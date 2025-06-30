@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Crown, Sparkles } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Crown, Sparkles, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import AuthModal from './AuthModal';
@@ -65,6 +65,13 @@ export default function Header() {
                 className="px-4 py-2 text-neutral-700 hover:text-warning-600 hover:bg-warning-50 rounded-lg transition-all duration-200 font-medium"
               >
                 Certifications
+              </Link>
+              <Link 
+                to="/reddit" 
+                className="px-4 py-2 text-neutral-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 font-medium flex items-center space-x-1"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Reddit</span>
               </Link>
             </nav>
 
@@ -192,6 +199,14 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Certifications
+              </Link>
+              <Link
+                to="/reddit"
+                className="flex items-center space-x-2 px-4 py-3 text-neutral-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Reddit Community</span>
               </Link>
               {!isPremium && (
                 <Link

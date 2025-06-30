@@ -11,6 +11,7 @@ import Mentor from './pages/Mentor';
 import Quiz from './pages/Quiz';
 import Certifications from './pages/Certifications';
 import Pricing from './pages/Pricing';
+import RedditIntegration from './pages/RedditIntegration';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/certifications" element={<Certifications />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/reddit" element={<RedditIntegration />} />
           </Routes>
         </Layout>
       </SubscriptionProvider>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { CheckCircle, X, Share2, RotateCcw, Trophy, ArrowRight } from 'lucide-react';
+import { CheckCircle, X, Share2, RotateCcw, Trophy, ArrowRight, MessageCircle } from 'lucide-react';
+import { redditService } from '../utils/reddit';
+import { Link } from 'react-router-dom';
 
 interface Question {
   id: number;
@@ -16,6 +18,7 @@ const Quiz: React.FC = () => {
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const questions: Question[] = [
     {
@@ -110,28 +113,32 @@ const Quiz: React.FC = () => {
         title: "Data Science & Analytics",
         description: "You have a strong analytical mind and love working with data! Consider careers in data science, business intelligence, or research.",
         color: "text-blue-600",
-        bgColor: "bg-blue-50"
+        bgColor: "bg-blue-50",
+        gradient: "from-blue-500 to-blue-600"
       };
     } else if (percentage >= 60) {
       return {
         title: "Tech & Development",
         description: "You enjoy problem-solving and building things! Explore careers in software development, product management, or systems analysis.",
         color: "text-green-600",
-        bgColor: "bg-green-50"
+        bgColor: "bg-green-50",
+        gradient: "from-green-500 to-green-600"
       };
     } else if (percentage >= 40) {
       return {
         title: "Creative & Design",
         description: "You have a creative flair and visual thinking skills! Consider careers in UX/UI design, marketing, or content creation.",
         color: "text-purple-600",
-        bgColor: "bg-purple-50"
+        bgColor: "bg-purple-50",
+        gradient: "from-purple-500 to-purple-600"
       };
     } else {
       return {
         title: "People & Communication",
         description: "You're a natural communicator and team player! Explore careers in human resources, sales, or project management.",
         color: "text-orange-600",
-        bgColor: "bg-orange-50"
+        bgColor: "bg-orange-50",
+        gradient: "from-orange-500 to-orange-600"
       };
     }
   };
@@ -145,6 +152,28 @@ const Quiz: React.FC = () => {
     setQuizCompleted(false);
   };
 
+  const shareToReddit = async () => {
+    const recommendation = getCareerRecommendation();
+    setIsSharing(true);
+    
+    try {
+      const result = await redditService.shareQuizResults({
+        careerPath: recommendation.title,
+        score: score,
+        description: recommendation.description
+      });
+      
+      if (result.success) {
+        alert('🎉 Results shared to Reddit successfully! Check r/careerguidance to see your post.');
+      }
+    } catch (error) {
+      console.error('Failed to share to Reddit:', error);
+      alert('Failed to share to Reddit. Please try again.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const shareResults = () => {
     const recommendation = getCareerRecommendation();
     const shareText = `I just discovered my ideal career path with CareerPath AI! 🚀 My result: ${recommendation.title}. Take the quiz and discover yours!`;
@@ -156,7 +185,6 @@ const Quiz: React.FC = () => {
         url: window.location.href,
       });
     } else {
-      // Fallback - copy to clipboard or show social media options
       navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
       alert('Results copied to clipboard! Share on your social media.');
     }
@@ -169,14 +197,15 @@ const Quiz: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-primary-600 to-blue-700 p-8 text-center">
-              <Trophy className="w-16 h-16 text-yellow-300 mx-auto mb-4" />
+            <div className={`bg-gradient-to-r ${recommendation.gradient} p-8 text-center relative overflow-hidden`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+              <Trophy className="w-16 h-16 text-white mx-auto mb-4 animate-bounce-subtle" />
               <h1 className="text-3xl font-bold text-white mb-2">Quiz Complete! 🎉</h1>
-              <p className="text-primary-100">You scored {score} out of {questions.length}</p>
+              <p className="text-white/90">You scored {score} out of {questions.length}</p>
             </div>
 
             <div className="p-8">
-              <div className={`${recommendation.bgColor} rounded-2xl p-6 mb-6`}>
+              <div className={`${recommendation.bgColor} rounded-2xl p-6 mb-6 border-2 border-current ${recommendation.color}`}>
                 <h2 className={`text-2xl font-bold ${recommendation.color} mb-3`}>
                   Your Recommended Career Path:
                 </h2>
@@ -188,7 +217,7 @@ const Quiz: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <button
                   onClick={shareResults}
                   className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -196,6 +225,25 @@ const Quiz: React.FC = () => {
                   <Share2 className="w-5 h-5" />
                   <span>Share Results</span>
                 </button>
+                
+                <button
+                  onClick={shareToReddit}
+                  disabled={isSharing}
+                  className="flex items-center justify-center space-x-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  {isSharing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Sharing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="w-5 h-5" />
+                      <span>Share to Reddit</span>
+                    </>
+                  )}
+                </button>
+                
                 <button
                   onClick={restartQuiz}
                   className="flex items-center justify-center space-x-2 bg-secondary-600 hover:bg-secondary-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -205,13 +253,33 @@ const Quiz: React.FC = () => {
                 </button>
               </div>
 
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <p className="text-secondary-700 mb-3">
-                  Ready to dive deeper into your career path?
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                  <h4 className="font-semibold text-blue-900 mb-2">Ready to dive deeper?</h4>
+                  <Link 
+                    to="/roadmap"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-block"
+                  >
+                    Create Your Roadmap
+                  </Link>
+                </div>
+                
+                <div className="bg-orange-50 rounded-lg p-4 text-center">
+                  <h4 className="font-semibold text-orange-900 mb-2">Join the discussion</h4>
+                  <Link 
+                    to="/reddit"
+                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-block"
+                  >
+                    Reddit Community
+                  </Link>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 text-center border border-purple-200">
+                <h4 className="font-semibold text-purple-900 mb-2">🎯 Pro Tip</h4>
+                <p className="text-purple-800 text-sm">
+                  Share your results on Reddit to get personalized advice from the career community!
                 </p>
-                <button className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                  Create Your Roadmap
-                </button>
               </div>
             </div>
           </div>
@@ -228,7 +296,7 @@ const Quiz: React.FC = () => {
           <h1 className="text-3xl font-bold text-secondary-900 mb-4">Career Discovery Quiz</h1>
           <p className="text-secondary-600">
             Answer these fun questions to discover your ideal career path! 
-            Share your results on social media and challenge your friends.
+            Share your results on Reddit and challenge your friends.
           </p>
         </div>
 
@@ -242,7 +310,7 @@ const Quiz: React.FC = () => {
           </div>
           <div className="w-full bg-secondary-200 rounded-full h-2">
             <div 
-              className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
             ></div>
           </div>
@@ -286,7 +354,7 @@ const Quiz: React.FC = () => {
               <button
                 onClick={handleNextQuestion}
                 disabled={selectedAnswer === null}
-                className="bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 disabled:from-gray-300 disabled:to-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
               >
                 <span>{currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}</span>
                 <ArrowRight className="w-5 h-5" />
@@ -300,7 +368,7 @@ const Quiz: React.FC = () => {
           <h3 className="text-lg font-semibold text-secondary-900 mb-2">💡 Did you know?</h3>
           <p className="text-secondary-700">
             The average person changes careers 5-7 times during their working life. 
-            This quiz helps identify your natural inclinations and interests!
+            This quiz helps identify your natural inclinations and interests! Share your results on Reddit to get community feedback.
           </p>
         </div>
       </div>
